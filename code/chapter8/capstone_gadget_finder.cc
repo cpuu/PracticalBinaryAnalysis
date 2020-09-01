@@ -46,13 +46,16 @@ find_gadgets_at_root(Section *text, uint64_t root,
 {
   size_t n, len;
   const uint8_t *pc;
-  uint64_t offset, addr;
+  uint64_t offset, root_offset, addr;
   std::string gadget_str;
   cs_insn *cs_ins; 
 
   const size_t max_gadget_len    = 5; /* instructions */
   const size_t x86_max_ins_bytes = 15;
-  const uint64_t root_offset     = max_gadget_len*x86_max_ins_bytes;
+  root_offset = max_gadget_len*x86_max_ins_bytes;
+
+  if(!root) return 0;
+  if(root_offset > root) root_offset = root;
 
   cs_ins = cs_malloc(dis);
   if(!cs_ins) {
@@ -61,8 +64,8 @@ find_gadgets_at_root(Section *text, uint64_t root,
   }
 
   for(uint64_t a = root-1; 
-               a >= root-root_offset && a >= 0;
-               a--) {
+      text->contains(a) && a >= root-root_offset;
+      a--) {
     addr   = a;
     offset = addr - text->vma;
     pc     = text->bytes + offset;
